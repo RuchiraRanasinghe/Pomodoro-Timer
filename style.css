@@ -1,84 +1,166 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Arial', sans-serif;
+/* ── RESET ─────────────────────────────────────────────── */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --navy:      #1a2a6c;
+  --navy-dark: #111d4e;
+  --gold:      #c8960c;
+  --gold-lt:   #f0b429;
+  --white:     #ffffff;
+  --light-bg:  #ebebeb;
+  --mid-grey:  #d0d0d0;
+  --dark-txt:  #111111;
+  --danger:    #c62828;
+  --go-green:  #1b6b3a;
+  --font-clock: 'Bebas Neue', sans-serif;
+  --font-ui:    'Inter', sans-serif;
 }
 
-body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background: linear-gradient(135deg, rgb(255, 99, 71), rgb(255, 165, 0));
+/* ── BODY / FULL VIEWPORT ───────────────────────────────── */
+html, body {
+  height: 100%;
+  background: var(--light-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-ui);
 }
 
-.container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    background-color: rgba(255, 255, 255, 0.20);
-    gap: 2em;
-    border-radius: 15px;
-    padding: 4em 3em;
+/* ── APP FRAME ──────────────────────────────────────────── */
+.app-frame {
+  width: min(900px, 100vw);
+  background: #f0f0f0;
+  box-shadow: 0 6px 40px rgba(0,0,0,0.22);
+  display: flex;
+  flex-direction: column;
+  border-radius: 4px;
+  overflow: hidden;
 }
 
-hr {
-    width: 100%;
-    background-color: #fff;
-    height: 5px;
-    border-radius: 1em;
-    border: none;
-    opacity: 0.5;
+/* ── HEADER BANNER ──────────────────────────────────────── */
+.header-wrap {
+  width: 100%;
+  background: #fff;
+  line-height: 0;
+}
+.header-img {
+  width: 100%;
+  display: block;
+  object-fit: cover;
+  max-height: 160px;
 }
 
-.title {
-    font-size: 2.5em;
-    font-weight: bold;
-} 
-
-.timer {
-    font-size: 10em;
-    font-weight: 700;
+/* ── TIMER SECTION ──────────────────────────────────────── */
+.timer-section {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.8rem 1rem 1rem;
+  background: #fff;
 }
 
-.button-wrapper {
-    display: flex;
-    gap: 2em;
+.timer-digits {
+  font-family: var(--font-clock);
+  font-size: clamp(7rem, 22vw, 12rem);
+  color: var(--dark-txt);
+  letter-spacing: 0.02em;
+  line-height: 1;
+  transition: color 0.3s;
+  user-select: none;
 }
 
-button {
-    padding: 1em 2em;
-    font-size: 1.5em;
-    font-weight: bold;
-    color: #fff;
-    background-color: rgb(255, 99, 71);
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: background-color 0.3s ease-in-out;
+.timer-digits.state-running { color: var(--dark-txt); }
+.timer-digits.state-warning {
+  color: var(--danger);
+  animation: warn-blink 0.6s step-start infinite;
+}
+.timer-digits.state-done { color: var(--danger); }
+
+@keyframes warn-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.25; }
 }
 
-button:hover {
-    transform: translateY(-10px);
-    background-color: rgb(255, 165, 0);
+/* ── CONTROL GRID ───────────────────────────────────────── */
+/*  Layout matches sample: [4min][5min][  Start  ][↺][🔊][⛶]  */
+.control-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr 1fr 1fr 1fr;
+  gap: 0;
+  border-top: 2px solid var(--mid-grey);
+  background: #f0f0f0;
 }
 
-#start {
-    background-color: rgb(60, 179, 113);
+.grid-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 1rem 0.5rem;
+  font-family: var(--font-ui);
+  font-size: 1.1rem;
+  font-weight: 700;
+  background: #f0f0f0;
+  color: var(--dark-txt);
+  border: none;
+  border-right: 1px solid var(--mid-grey);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  min-height: 64px;
+}
+.grid-btn:last-child { border-right: none; }
+.grid-btn:hover { background: #ddd; }
+.grid-btn:active { background: #ccc; }
+
+/* Preset buttons */
+.preset-btn { font-size: 1.05rem; font-weight: 700; }
+.preset-btn.active {
+  background: var(--navy);
+  color: var(--white);
+}
+.preset-btn.active:hover { background: var(--navy-dark); }
+
+/* Start / Stop button */
+.start-btn {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  border-left: 1px solid var(--mid-grey);
+}
+.start-btn.running {
+  background: var(--navy);
+  color: var(--white);
+}
+.start-btn.running:hover { background: var(--navy-dark); }
+
+/* Icon-only buttons */
+.icon-btn svg { width: 26px; height: 26px; }
+.icon-btn.active-icon { color: var(--danger); }
+
+/* ── PROGRESS BAR ────────────────────────────────────────── */
+.progress-track {
+  height: 5px;
+  background: var(--mid-grey);
+}
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--navy);
+  transition: width 1s linear, background 0.4s;
+}
+.progress-fill.warning { background: var(--danger); }
+
+/* ── RESPONSIVE ─────────────────────────────────────────── */
+@media (max-width: 540px) {
+  .control-grid {
+    grid-template-columns: 1fr 1fr 2fr 1fr 1fr 1fr;
+  }
+  .grid-btn { padding: 0.75rem 0.2rem; font-size: 0.88rem; min-height: 54px; }
+  .icon-btn svg { width: 20px; height: 20px; }
+  .timer-digits { font-size: clamp(5rem, 26vw, 8rem); }
 }
 
-#start:hover {
-    background-color: rgb(34, 139, 34);
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
 }
-
-#stop {
-    background-color: rgb(255, 17, 0);
-}
-
-#stop:hover {
-    background-color: rgb(178, 34, 34);
-}
-
