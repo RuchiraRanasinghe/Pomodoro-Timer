@@ -4,29 +4,52 @@ const timerEl    = document.getElementById('timer');
 const progressEl = document.getElementById('progress');
 const startBtn   = document.getElementById('start');
 const resetBtn   = document.getElementById('reset');
-const muteBtn    = document.getElementById('mute');
-const muteIcon   = document.getElementById('mute-icon');
+const bellBtn    = document.getElementById('bell-btn');
 const fsBtn      = document.getElementById('fullscreen');
+const bellAudio  = document.getElementById('bell-audio');
 const presetBtns = document.querySelectorAll('.preset-btn');
 
 // ── State ────────────────────────────────────────────────
-let totalSeconds  = 0;
-let timeLeft      = 0;
-let intervalId    = null;
-let muted         = false;
+let totalSeconds = 0;
+let timeLeft     = 0;
+let intervalId   = null;
+let warnRung     = false;   // so the 30s bell only rings once per countdown
 
-// SVG paths
-const PATH_VOL  = `<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>`;
-const PATH_MUTE = `<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>`;
+// ── Bell sound ───────────────────────────────────────────
+function ringBell() {
+  // Animate the button
+  bellBtn.classList.remove('bell-ringing');
+  void bellBtn.offsetWidth; // reflow to restart animation
+  bellBtn.classList.add('bell-ringing');
+  setTimeout(() => bellBtn.classList.remove('bell-ringing'), 500);
+
+  // Play bell.wav
+  if (bellAudio && bellAudio.readyState >= 2) {
+    bellAudio.currentTime = 0;
+    bellAudio.play().catch(() => {});
+  } else {
+    // Fallback synthetic tone if wav not loaded
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      [0, 0.35, 0.7].forEach(t => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.frequency.value = 830; o.type = 'sine';
+        g.gain.setValueAtTime(0.6, ctx.currentTime + t);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.5);
+        o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + 0.5);
+      });
+    } catch(e) {}
+  }
+}
 
 // ── Helpers ──────────────────────────────────────────────
 function fmt(s) {
-  const m = Math.floor(s / 60);
-  return `${String(m).padStart(2,'0')}:${String(s % 60).padStart(2,'0')}`;
+  return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
 }
 
 function setTimerState(state) {
-  timerEl.classList.remove('state-running','state-warning','state-done');
+  timerEl.classList.remove('state-running', 'state-warning', 'state-done');
   if (state) timerEl.classList.add('state-' + state);
 }
 
@@ -34,25 +57,18 @@ function updateDisplay() {
   timerEl.textContent = fmt(timeLeft);
   const pct = totalSeconds > 0 ? ((totalSeconds - timeLeft) / totalSeconds) * 100 : 0;
   progressEl.style.width = pct + '%';
-  const warn = timeLeft <= 30 && timeLeft > 0 && intervalId;
-  progressEl.classList.toggle('warning', !!warn);
-  if (warn) setTimerState('warning');
-  else if (intervalId) setTimerState('running');
-}
 
-function playBeep() {
-  if (muted) return;
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    [0, 0.3, 0.6].forEach(t => {
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.connect(g); g.connect(ctx.destination);
-      o.frequency.value = 880; o.type = 'sine';
-      g.gain.setValueAtTime(0.5, ctx.currentTime + t);
-      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.25);
-      o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + 0.25);
-    });
-  } catch(e) {}
+  // Warning state: last 30 seconds
+  if (timeLeft <= 30 && timeLeft > 0 && intervalId) {
+    setTimerState('warning');
+    progressEl.classList.add('warning');
+
+    // Ring bell ONCE when crossing 30s mark
+    if (!warnRung) {
+      warnRung = true;
+      ringBell();
+    }
+  }
 }
 
 function stopTimer() {
@@ -65,11 +81,12 @@ function stopTimer() {
 // ── Preset buttons ───────────────────────────────────────
 presetBtns.forEach(btn => {
   btn.addEventListener('click', () => {
-    if (intervalId) return; // locked while running
+    if (intervalId) return;
     presetBtns.forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     totalSeconds = parseInt(btn.dataset.seconds);
-    timeLeft = totalSeconds;
+    timeLeft     = totalSeconds;
+    warnRung     = false;
     setTimerState(null);
     progressEl.classList.remove('warning');
     progressEl.style.width = '0%';
@@ -80,13 +97,14 @@ presetBtns.forEach(btn => {
 // ── Start / Stop ─────────────────────────────────────────
 startBtn.addEventListener('click', () => {
   if (intervalId) {
-    // — STOP —
+    // STOP
     stopTimer();
     setTimerState(null);
     progressEl.classList.remove('warning');
   } else {
-    // — START —
+    // START
     if (timeLeft <= 0) return;
+    warnRung = timeLeft <= 30; // if already in warning zone, don't double-ring
     startBtn.textContent = 'Stop';
     startBtn.classList.add('running');
     setTimerState('running');
@@ -94,12 +112,13 @@ startBtn.addEventListener('click', () => {
     intervalId = setInterval(() => {
       timeLeft--;
       updateDisplay();
+
       if (timeLeft <= 0) {
         stopTimer();
         setTimerState('done');
         progressEl.style.width = '100%';
         progressEl.classList.remove('warning');
-        playBeep();
+        ringBell(); // Ring at finish
       }
     }, 1000);
   }
@@ -109,27 +128,24 @@ startBtn.addEventListener('click', () => {
 resetBtn.addEventListener('click', () => {
   stopTimer();
   timeLeft = totalSeconds;
+  warnRung = false;
   setTimerState(null);
   progressEl.style.width = '0%';
   progressEl.classList.remove('warning');
   updateDisplay();
 });
 
-// ── Mute ─────────────────────────────────────────────────
-muteBtn.addEventListener('click', () => {
-  muted = !muted;
-  muteIcon.innerHTML = muted ? PATH_MUTE : PATH_VOL;
-  muteBtn.classList.toggle('active-icon', muted);
-  muteBtn.title = muted ? 'Unmute' : 'Mute';
+// ── Manual Bell button ───────────────────────────────────
+bellBtn.addEventListener('click', () => {
+  ringBell();
 });
 
-// ── Fullscreen ───────────────────────────────────────────
+// ── Fullscreen toggle ────────────────────────────────────
 fsBtn.addEventListener('click', () => {
-  const el = document.documentElement;
   if (!document.fullscreenElement) {
-    el.requestFullscreen && el.requestFullscreen();
+    document.documentElement.requestFullscreen().catch(() => {});
   } else {
-    document.exitFullscreen && document.exitFullscreen();
+    document.exitFullscreen().catch(() => {});
   }
 });
 

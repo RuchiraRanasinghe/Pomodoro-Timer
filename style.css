@@ -5,89 +5,94 @@
   --navy:      #1a2a6c;
   --navy-dark: #111d4e;
   --gold:      #c8960c;
-  --gold-lt:   #f0b429;
   --white:     #ffffff;
   --light-bg:  #ebebeb;
   --mid-grey:  #d0d0d0;
   --dark-txt:  #111111;
   --danger:    #c62828;
-  --go-green:  #1b6b3a;
   --font-clock: 'Bebas Neue', sans-serif;
   --font-ui:    'Inter', sans-serif;
 }
 
-/* ── BODY / FULL VIEWPORT ───────────────────────────────── */
+/* ── BODY ───────────────────────────────────────────────── */
 html, body {
+  width: 100%;
   height: 100%;
-  background: var(--light-bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  overflow: hidden;
+  background: #f0f0f0;
   font-family: var(--font-ui);
 }
 
 /* ── APP FRAME ──────────────────────────────────────────── */
 .app-frame {
-  width: min(900px, 100vw);
-  background: #f0f0f0;
-  box-shadow: 0 6px 40px rgba(0,0,0,0.22);
+  width: 100vw;
+  height: 100vh;
   display: flex;
   flex-direction: column;
-  border-radius: 4px;
   overflow: hidden;
+  background: #fff;
 }
 
 /* ── HEADER BANNER ──────────────────────────────────────── */
 .header-wrap {
+  flex: 0 0 auto;        /* never grow or shrink */
   width: 100%;
   background: #fff;
   line-height: 0;
 }
+
 .header-img {
   width: 100%;
+  height: auto;          /* let the image define its own height — NO cropping */
+  max-height: 28vh;      /* cap so it doesn't eat too much on tall screens */
   display: block;
-  object-fit: cover;
-  max-height: 160px;
+  object-fit: contain;   /* show the FULL image, no cropping */
+  object-position: center;
 }
 
 /* ── TIMER SECTION ──────────────────────────────────────── */
 .timer-section {
-  flex: 1;
+  flex: 1 1 0;
+  min-height: 0;         /* prevents flex overflow */
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.8rem 1rem 1rem;
   background: #fff;
+  overflow: hidden;
 }
 
+/* ── TIMER DIGITS ───────────────────────────────────────── */
 .timer-digits {
   font-family: var(--font-clock);
-  font-size: clamp(7rem, 22vw, 12rem);
+  font-size: clamp(7rem, min(40vw, 38vh), 28rem);
   color: var(--dark-txt);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
   line-height: 1;
   transition: color 0.3s;
   user-select: none;
+  white-space: nowrap;
 }
 
+/* ── Timer states ───────────────────────────────────────── */
 .timer-digits.state-running { color: var(--dark-txt); }
+
 .timer-digits.state-warning {
   color: var(--danger);
   animation: warn-blink 0.6s step-start infinite;
 }
+
 .timer-digits.state-done { color: var(--danger); }
 
 @keyframes warn-blink {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.25; }
+  0%, 100% { opacity: 1;    }
+  50%       { opacity: 0.2; }
 }
 
 /* ── CONTROL GRID ───────────────────────────────────────── */
-/*  Layout matches sample: [4min][5min][  Start  ][↺][🔊][⛶]  */
 .control-grid {
+  flex: 0 0 auto;
   display: grid;
   grid-template-columns: 1fr 1fr 2fr 1fr 1fr 1fr;
-  gap: 0;
   border-top: 2px solid var(--mid-grey);
   background: #f0f0f0;
 }
@@ -96,10 +101,9 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
-  padding: 1rem 0.5rem;
+  height: clamp(52px, 9vh, 84px);
   font-family: var(--font-ui);
-  font-size: 1.1rem;
+  font-size: clamp(0.8rem, 1.6vw, 1.15rem);
   font-weight: 700;
   background: #f0f0f0;
   color: var(--dark-txt);
@@ -107,41 +111,43 @@ html, body {
   border-right: 1px solid var(--mid-grey);
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
-  min-height: 64px;
 }
-.grid-btn:last-child { border-right: none; }
-.grid-btn:hover { background: #ddd; }
+.grid-btn:last-child  { border-right: none; }
+.grid-btn:hover  { background: #ddd; }
 .grid-btn:active { background: #ccc; }
 
-/* Preset buttons */
-.preset-btn { font-size: 1.05rem; font-weight: 700; }
-.preset-btn.active {
-  background: var(--navy);
-  color: var(--white);
-}
+.preset-btn.active       { background: var(--navy); color: var(--white); }
 .preset-btn.active:hover { background: var(--navy-dark); }
 
-/* Start / Stop button */
 .start-btn {
-  font-size: 1.2rem;
-  font-weight: 700;
+  font-size: clamp(1rem, 2vw, 1.35rem);
   letter-spacing: 0.06em;
   border-left: 1px solid var(--mid-grey);
 }
-.start-btn.running {
-  background: var(--navy);
-  color: var(--white);
-}
+.start-btn.running       { background: var(--navy); color: var(--white); }
 .start-btn.running:hover { background: var(--navy-dark); }
 
-/* Icon-only buttons */
-.icon-btn svg { width: 26px; height: 26px; }
-.icon-btn.active-icon { color: var(--danger); }
+.icon-btn svg { width: clamp(22px, 2.6vw, 32px); height: clamp(22px, 2.6vw, 32px); }
+
+.icon-btn.bell-ringing {
+  color: var(--gold);
+  animation: bell-shake 0.45s ease-in-out;
+}
+
+@keyframes bell-shake {
+  0%   { transform: rotate(0deg);   }
+  20%  { transform: rotate(-18deg); }
+  40%  { transform: rotate(18deg);  }
+  60%  { transform: rotate(-12deg); }
+  80%  { transform: rotate(12deg);  }
+  100% { transform: rotate(0deg);   }
+}
 
 /* ── PROGRESS BAR ────────────────────────────────────────── */
 .progress-track {
-  height: 5px;
+  flex: 0 0 6px;
   background: var(--mid-grey);
+  overflow: hidden;
 }
 .progress-fill {
   height: 100%;
@@ -151,15 +157,10 @@ html, body {
 }
 .progress-fill.warning { background: var(--danger); }
 
-/* ── RESPONSIVE ─────────────────────────────────────────── */
-@media (max-width: 540px) {
-  .control-grid {
-    grid-template-columns: 1fr 1fr 2fr 1fr 1fr 1fr;
-  }
-  .grid-btn { padding: 0.75rem 0.2rem; font-size: 0.88rem; min-height: 54px; }
-  .icon-btn svg { width: 20px; height: 20px; }
-  .timer-digits { font-size: clamp(5rem, 26vw, 8rem); }
-}
+/* ── Fullscreen ─────────────────────────────────────────── */
+:fullscreen          .app-frame,
+:-webkit-full-screen .app-frame,
+:-moz-full-screen    .app-frame { width: 100vw; height: 100vh; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
