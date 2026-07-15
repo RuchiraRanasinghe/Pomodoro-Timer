@@ -1,0 +1,42 @@
+{
+  "name": "pomodoro-timer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RuchiraRanasinghe/Pomodoro-Timer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/RuchiraRanasinghe/Pomodoro-Timer/issues"
+  },
+  "homepage": "https://github.com/RuchiraRanasinghe/Pomodoro-Timer#readme",
+  "devDependencies": {
+    "electron": "^43.1.1",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "com.debatetimer.app",
+    "productName": "Debate Timer",
+    "files": [
+      "index.html",
+      "style.css",
+      "app.js",
+      "main.js",
+      "bell2.wav",
+      "Timer new.png",
+      "Timer_BG_FREE.png"
+    ],
+    "win": {
+      "target": "nsis"
+    }
+  }
+}
