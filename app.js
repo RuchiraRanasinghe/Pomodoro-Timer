@@ -13,7 +13,7 @@ const presetBtns = document.querySelectorAll('.preset-btn');
 let totalSeconds = 0;
 let timeLeft     = 0;
 let intervalId   = null;
-let warnRung     = false;   // so the 30s bell only rings once per countdown
+let warnRung     = false;   // so the 60s bell only rings once per countdown
 
 // ── Bell sound ───────────────────────────────────────────
 function ringBell() {
@@ -59,7 +59,7 @@ function updateDisplay() {
   progressEl.style.width = pct + '%';
 
   // Warning state: last 30 seconds
-  if (timeLeft <= 30 && timeLeft > 0 && intervalId) {
+  if (timeLeft <= 60 && timeLeft > 0 && intervalId) {
     setTimerState('warning');
     progressEl.classList.add('warning');
 
@@ -104,10 +104,11 @@ startBtn.addEventListener('click', () => {
   } else {
     // START
     if (timeLeft <= 0) return;
-    warnRung = timeLeft <= 30; // if already in warning zone, don't double-ring
+    warnRung = timeLeft <= 60; // if already in warning zone, don't double-ring
     startBtn.textContent = 'Stop';
     startBtn.classList.add('running');
     setTimerState('running');
+    ringBell(); // Ring at start
 
     intervalId = setInterval(() => {
       timeLeft--;
